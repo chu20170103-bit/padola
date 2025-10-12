@@ -33,22 +33,22 @@ function formatScheduleText(text) {
     
     // 替換特殊符號和關鍵字為 HTML 標籤
     formatted = formatted
-        // 地址&停車場官方輸入【A】或【B】 → 加上連結
+        // 先處理地址&停車場官方輸入【A】或【B】 → 加上連結和雙換行
         .replace(/🚘地址&停車場輸入【([AB])】/g, (match, letter) => {
-            return `🚘<a href="https://line.me/R/ti/p/@301jxtvh" target="_blank" class="sch-link">地址&停車場官方輸入<span class="sch-title-link">【${letter}】</span></a>`;
+            return `🚘<a href="https://line.me/R/ti/p/@301jxtvh" target="_blank" class="sch-link">地址&停車場官方輸入<span class="sch-title-link">【${letter}】</span></a><br><br>`;
         })
-        // 【桃園區】【中壢區】等標題改為醒目樣式（但不是A或B）
-        .replace(/【((?!A|B)[^】]+)】/g, '<span class="sch-title">【$1】</span>')
+        // 【桃園區】【中壢區】等區域標題
+        .replace(/【(桃園區|中壢區)】/g, '<span class="sch-title">【$1】</span>')
+        // 妹妹編號 B01, A01 等（不帶【】）
+        .replace(/\b([AB]\d+)\b/g, '<span class="sch-code">$1</span>')
         // 🌸 符號高亮（新妹妹）
         .replace(/🌸/g, '<span class="sch-new">🌸</span>')
-        // 🚘 符號高亮
+        // 🚘 符號高亮（如果還有單獨的）
         .replace(/🚘/g, '<span class="sch-icon">🚘</span>')
         // ❤️ 符號高亮
         .replace(/❤️/g, '<span class="sch-heart">❤️</span>')
         // 📷 符號高亮
         .replace(/📷/g, '<span class="sch-camera">📷</span>')
-        // 妹妹編號 B01, A01 等
-        .replace(/([AB]\d+)/g, '<span class="sch-code">$1</span>')
         // 狀態：現
         .replace(/(\s現)(?!\d)/g, '<span class="sch-available"> 現</span>')
         // 狀態：滿
@@ -63,13 +63,33 @@ function formatScheduleText(text) {
 
 // 分割桃園和中壢的時刻表
 function splitSchedule(text) {
-    // 找出【桃園區】和【中壢區】的位置
-    const taoyuanMatch = text.match(/【桃園區】[\s\S]*?(?=【中壢區】|$)/);
-    const zhongliMatch = text.match(/【中壢區】[\s\S]*/);
+    console.log('原始時刻表資料（前200字）:', text.substring(0, 200));
+    
+    // 找出【桃園區】的位置
+    const taoyuanIndex = text.indexOf('【桃園區】');
+    const zhongliIndex = text.indexOf('【中壢區】');
+    
+    let taoyuan = '';
+    let zhongli = '';
+    
+    if (taoyuanIndex !== -1 && zhongliIndex !== -1) {
+        // 兩個都找到
+        taoyuan = text.substring(taoyuanIndex, zhongliIndex).trim();
+        zhongli = text.substring(zhongliIndex).trim();
+    } else if (taoyuanIndex !== -1) {
+        // 只有桃園區
+        taoyuan = text.substring(taoyuanIndex).trim();
+    } else if (zhongliIndex !== -1) {
+        // 只有中壢區
+        zhongli = text.substring(zhongliIndex).trim();
+    }
+    
+    console.log('桃園區資料（前100字）:', taoyuan.substring(0, 100));
+    console.log('中壢區資料（前100字）:', zhongli.substring(0, 100));
     
     return {
-        taoyuan: taoyuanMatch ? taoyuanMatch[0].trim() : '暫無桃園區資料',
-        zhongli: zhongliMatch ? zhongliMatch[0].trim() : '暫無中壢區資料'
+        taoyuan: taoyuan || '暫無桃園區資料',
+        zhongli: zhongli || '暫無中壢區資料'
     };
 }
 
@@ -277,7 +297,7 @@ function renderGallery() {
                         `<a href="${girl.download}" class="download-btn" target="_blank" onclick="event.stopPropagation();">📥 照影下載</a>` : 
                         `<button class="download-btn disabled" onclick="event.stopPropagation();" disabled>📥 照影下載</button>`
                     }
-                    <a href="https://lin.ee/ut8ggmB" class="book-btn" target="_blank" onclick="event.stopPropagation();">立即報班</a>
+                    <a href="https://line.me/ti/p/uIhuzkYEr-" class="book-btn" target="_blank" onclick="event.stopPropagation();">立即報班</a>
                 </div>
             </div>
         `;
