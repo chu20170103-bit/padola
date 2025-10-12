@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>潘朵拉 - 桃園中壢廠家 | 自動化預約系統</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 導航欄 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">💎</span>
+                <span class="logo-text">潘朵拉</span>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="#home" class="nav-link">首頁</a>
+                <a href="#gallery" class="nav-link">在班妹妹</a>
+                <a href="#about" class="nav-link">系統優勢</a>
+                <a href="#contact" class="nav-link">立即報班</a>
+            </div>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">
+                    <span class="title-main">潘朵拉桃園中壢廠家</span>
+                    <span class="title-sub">歡迎報班預約 · 自動化系統</span>
+                </h1>
+                <p class="hero-description">
+                    歡迎體驗極速預約快感 · 智能報班系統
+                </p>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">16+</div>
+                        <div class="stat-label">在班妹妹</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">自動化系統</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">真實照片</div>
+                    </div>
+                </div>
+                <div class="hero-buttons">
+                    <a href="#gallery" class="btn btn-primary">⚡ 極速查看</a>
+                    <a href="#contact" class="btn btn-secondary">🚀 自動報班</a>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <div class="mouse"></div>
+        </div>
+    </section>
+
+    <!-- 最新時刻表 -->
+    <section class="schedule-banner" id="schedule">
+        <div class="container">
+            <div class="schedule-content">
+                <div class="schedule-header">
+                    <span class="live-indicator">🔴 LIVE</span>
+                    <h3 class="schedule-title">最新時刻表</h3>
+                    <span class="update-time" id="updateTime">更新中...</span>
+                </div>
+                <div class="schedule-grid">
+                    <!-- 桃園區 -->
+                    <div class="schedule-column">
+                        <div class="column-header">
+                            <span class="column-icon">🌸</span>
+                            <h4>桃園區</h4>
+                        </div>
+                        <div class="schedule-text" id="scheduleTextTaoyuan">
+                            <div class="loader-small"></div>
+                            <p>載入中...</p>
+                        </div>
+                    </div>
+                    <!-- 中壢區 -->
+                    <div class="schedule-column">
+                        <div class="column-header">
+                            <span class="column-icon">💎</span>
+                            <h4>中壢區</h4>
+                        </div>
+                        <div class="schedule-text" id="scheduleTextZhongli">
+                            <div class="loader-small"></div>
+                            <p>載入中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 圖片展示區 -->
+    <section class="gallery-section" id="gallery">
+        <div class="container">
+            <h2 class="section-title">在班妹妹展示</h2>
+            <p class="section-subtitle">所有照片100%真實 · 本人服務 · 自動化報班系統</p>
+            
+            <!-- 分類標籤 -->
+            <div class="tabs">
+                <button class="tab-btn active" data-category="all">
+                    <span>全部</span>
+                    <span class="tab-count">16</span>
+                </button>
+                <button class="tab-btn" data-category="桃園">
+                    <span>桃園區</span>
+                    <span class="tab-count">7</span>
+                </button>
+                <button class="tab-btn" data-category="中壢">
+                    <span>中壢區</span>
+                    <span class="tab-count">9</span>
+                </button>
+            </div>
+
+            <!-- 圖片網格 - 將從資料庫動態載入 -->
+            <div class="gallery" id="galleryContainer">
+                <!-- 載入中提示 -->
+                <div class="loading-message">
+                    <div class="loader"></div>
+                    <p>正在載入妹妹資訊...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 關於我們 -->
+    <section class="about" id="about">
+        <div class="container">
+            <h2 class="section-title">為什麼選擇潘朵拉</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>極速預約</h3>
+                    <p>自動化報班系統，秒速確認預約</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3>100% 真實</h3>
+                    <p>所有照片真實無修圖，本人親自服務</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>即時更新</h3>
+                    <p>在班資訊實時同步，絕不撲空</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>隱私保護</h3>
+                    <p>嚴格保護客戶隱私，絕對保密</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 聯絡我們 -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <h2 class="section-title">極速報班預約</h2>
+            <p class="section-subtitle">體驗自動化預約快感 · 選擇妹妹立即報班</p>
+            <div class="contact-methods">
+                <a href="https://lin.ee/ut8ggmB" class="contact-btn line-btn" target="_blank">
+                    <span class="contact-icon">⚡</span>
+                    <span>LINE 極速報班</span>
+                </a>
+                <a href="https://lin.ee/ut8ggmB" class="contact-btn schedule-btn" target="_blank">
+                    <span class="contact-icon">📋</span>
+                    <span>官方即時班表</span>
+                </a>
+                <a href="https://lin.ee/cHYbaIk" class="contact-btn vip-btn" target="_blank">
+                    <span class="contact-icon">👑</span>
+                    <span>【特殊客/預付卡】查號台官方</span>
+                </a>
+            </div>
+            <div class="contact-features">
+                <div class="contact-feature">
+                    <span class="feature-check">✓</span> 自動化系統
+                </div>
+                <div class="contact-feature">
+                    <span class="feature-check">✓</span> 即時確認
+                </div>
+                <div class="contact-feature">
+                    <span class="feature-check">✓</span> 快速到位
+                </div>
+            </div>
+        </div>
+    </section>
+
+        <!-- 燈箱效果 -->
+        <div class="lightbox" id="lightbox">
+            <span class="close-btn">&times;</span>
+            <img class="lightbox-img" id="lightbox-img" src="" alt="">
+            <button class="nav-btn prev-btn" id="prev-btn">&#10094;</button>
+            <button class="nav-btn next-btn" id="next-btn">&#10095;</button>
+        </div>
+
+    <!-- 頁腳 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <span class="logo-icon">💎</span>
+                    <span class="logo-text">潘朵拉</span>
+                </div>
+                <p class="footer-text">桃園中壢廠家 · 自動化報班系統</p>
+                <p class="footer-slogan">歡迎體驗極速預約快感</p>
+                <p class="footer-copyright">
+                    &copy; 2025 
+                    <a href="https://lin.ee/30SMeiM" target="_blank" class="footer-link">捷效數位網路製作</a> 
+                    All rights reserved.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 回到頂部按鈕 -->
+    <button class="scroll-to-top" id="scrollToTop">
+        <span>↑</span>
+    </button>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+
