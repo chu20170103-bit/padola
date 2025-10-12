@@ -8,7 +8,8 @@ const SHEET_CONFIG = {
         REGION_NAME: 0,  // A欄：區域妹妹（例如：【桃園區】可麗露）
         INFO: 1,         // B欄：妹妹資訊
         DOWNLOAD: 2,     // C欄：妹妹資料下載
-        IMAGE: 3         // D欄：妹妹照片 ✅
+        IMAGE: 3,        // D欄：妹妹照片
+        VIDEO: 4         // E欄：妹妹影片 ✅
     },
     
     // 掃描起始行（從第2行開始，索引1）

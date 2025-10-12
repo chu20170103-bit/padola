@@ -721,6 +721,45 @@ body {
     border-color: rgba(139, 92, 246, 0.3);
 }
 
+.girl-media {
+    position: relative;
+}
+
+.media-toggle {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    display: flex;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 5px;
+    border-radius: 25px;
+    backdrop-filter: blur(10px);
+}
+
+.toggle-btn {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.toggle-btn.active {
+    background: var(--gradient-1);
+    color: white;
+}
+
 .girl-image {
     width: 100%;
     height: 280px;
@@ -731,6 +770,15 @@ body {
     align-items: center;
     justify-content: center;
     cursor: pointer;
+}
+
+/* 當有影片時才使用切換模式 */
+.girl-media .girl-image {
+    display: none;
+}
+
+.girl-media .girl-image.active {
+    display: flex;
 }
 
 .girl-image::after {
@@ -762,6 +810,29 @@ body {
 
 .gallery-item:hover .girl-image img {
     transform: scale(1.05);
+}
+
+.girl-video {
+    width: 100%;
+    height: 280px;
+    display: none;
+    background: rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.girl-video.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.girl-video iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    object-fit: contain;
+    display: block;
 }
 
 .girl-content {

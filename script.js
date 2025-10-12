@@ -155,6 +155,7 @@ async function loadGirlsData() {
             const info = row[SHEET_CONFIG.COLUMNS.INFO];
             const download = row[SHEET_CONFIG.COLUMNS.DOWNLOAD];
             const image = row[SHEET_CONFIG.COLUMNS.IMAGE];
+            const video = row[SHEET_CONFIG.COLUMNS.VIDEO];
             
             // 解析「【桃園區】可麗露」格式
             const parsed = parseRegionAndName(regionName);
@@ -164,8 +165,8 @@ async function loadGirlsData() {
                     region: parsed.region,
                     name: parsed.name,
                     hasImage: !!image,
-                    hasDownload: !!download,
-                    imageUrl: image ? image.substring(0, 50) + '...' : '無'
+                    hasVideo: !!video,
+                    hasDownload: !!download
                 });
                 
                 girlsData.push({
@@ -173,6 +174,7 @@ async function loadGirlsData() {
                     name: parsed.name.trim(),
                     area: parsed.region,
                     image: image ? image.trim() : '',
+                    video: video ? video.trim() : '',
                     info: info || '',
                     download: download ? download.trim() : '',
                     rowNumber: i + 1  // 實際行號（從1開始）
@@ -254,6 +256,25 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// 轉換 Google Drive 影片連結為嵌入格式
+function convertDriveVideoUrl(url) {
+    if (!url) return null;
+    
+    // 從 Google Drive 連結中提取 file ID
+    const match = url.match(/\/file\/d\/([^\/]+)/);
+    if (match) {
+        const fileId = match[1];
+        return `https://drive.google.com/file/d/${fileId}/preview`;
+    }
+    
+    // 如果已經是 preview 格式，直接返回
+    if (url.includes('/preview')) {
+        return url;
+    }
+    
+    return url;
+}
+
 // 渲染圖片展示
 function renderGallery() {
     galleryContainer.innerHTML = '';
@@ -273,13 +294,27 @@ function renderGallery() {
         galleryItem.setAttribute('data-category', girl.area);
         
         const imageUrl = girl.image || `https://via.placeholder.com/400x600/667eea/ffffff?text=${encodeURIComponent(girl.name)}`;
+        const videoUrl = girl.video ? convertDriveVideoUrl(girl.video) : null;
         
         // 處理妹妹資訊文字（保留換行）
         const infoText = girl.info.replace(/\n/g, '<br>');
         
         galleryItem.innerHTML = `
-            <div class="girl-image">
-                <img src="${imageUrl}" alt="${girl.name}" loading="lazy" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x600/764ba2/ffffff?text=${encodeURIComponent(girl.name)}'">
+            <div class="girl-media">
+                ${videoUrl ? `
+                    <div class="media-toggle">
+                        <button class="toggle-btn active" data-type="photo">📷 照片</button>
+                        <button class="toggle-btn" data-type="video">🎬 影片</button>
+                    </div>
+                ` : ''}
+                <div class="girl-image ${videoUrl ? 'active' : ''}">
+                    <img src="${imageUrl}" alt="${girl.name}" loading="lazy" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x600/764ba2/ffffff?text=${encodeURIComponent(girl.name)}'">
+                </div>
+                ${videoUrl ? `
+                    <div class="girl-video">
+                        <iframe src="${videoUrl}" frameborder="0" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                ` : ''}
             </div>
             <div class="girl-content">
                 <div class="girl-header">
@@ -319,6 +354,34 @@ function renderGallery() {
             copyBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 copyToClipboard(girl.info, copyBtn);
+            });
+        }
+        
+        // 添加照片/影片切換功能
+        if (girl.video) {
+            const toggleBtns = galleryItem.querySelectorAll('.toggle-btn');
+            const imageDiv = galleryItem.querySelector('.girl-image');
+            const videoDiv = galleryItem.querySelector('.girl-video');
+            
+            toggleBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    
+                    const type = btn.dataset.type;
+                    
+                    // 切換按鈕狀態
+                    toggleBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    // 切換顯示內容
+                    if (type === 'photo') {
+                        imageDiv.classList.add('active');
+                        videoDiv.classList.remove('active');
+                    } else {
+                        imageDiv.classList.remove('active');
+                        videoDiv.classList.add('active');
+                    }
+                });
             });
         }
     });
@@ -474,19 +537,23 @@ function updateVisibleImages() {
 function initLightbox() {
     const galleryItems = document.querySelectorAll('.gallery-item');
     
-    // 打開燈箱 - 點擊圖片區域
+    // 打開燈箱 - 點擊圖片區域（只在照片模式下）
     galleryItems.forEach((item, index) => {
         const girlImage = item.querySelector('.girl-image');
         
         if (girlImage) {
             girlImage.addEventListener('click', (e) => {
                 e.stopPropagation();
-                updateVisibleImages();
-                currentImageIndex = visibleImages.indexOf(item);
-                const imgSrc = item.querySelector('img').src;
-                lightboxImg.src = imgSrc;
-                lightbox.classList.add('active');
-                document.body.style.overflow = 'hidden';
+                
+                // 只有在照片模式（active）下才開啟燈箱
+                if (girlImage.classList.contains('active')) {
+                    updateVisibleImages();
+                    currentImageIndex = visibleImages.indexOf(item);
+                    const imgSrc = item.querySelector('img').src;
+                    lightboxImg.src = imgSrc;
+                    lightbox.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
             });
             
             // 添加提示效果
@@ -497,16 +564,36 @@ function initLightbox() {
 }
 
 // 關閉燈箱
-closeBtn.addEventListener('click', closeLightbox);
-lightbox.addEventListener('click', (e) => {
-    if (e.target === lightbox) {
-        closeLightbox();
-    }
-});
-
 function closeLightbox() {
-    lightbox.classList.remove('active');
+    if (lightbox) {
+        lightbox.classList.remove('active');
+    }
     document.body.style.overflow = 'auto';
+}
+
+// 多種關閉方式
+if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeLightbox();
+    });
+}
+
+if (lightbox) {
+    lightbox.addEventListener('click', (e) => {
+        // 點擊背景黑色區域關閉
+        if (e.target === lightbox) {
+            closeLightbox();
+        }
+    });
+}
+
+// 點擊圖片本身也能關閉
+if (lightboxImg) {
+    lightboxImg.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeLightbox();
+    });
 }
 
 // 上一張圖片
