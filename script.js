@@ -128,9 +128,21 @@ async function loadSchedule() {
     }
 }
 
-// 載入資料
-async function loadGirlsData() {
+// 載入資料（帶快取）
+let cachedData = null;
+let lastLoadTime = 0;
+const CACHE_DURATION = 60000; // 快取 60 秒
+
+async function loadGirlsData(forceReload = false) {
     try {
+        // 如果有快取且未過期，直接使用快取
+        const now = Date.now();
+        if (!forceReload && cachedData && (now - lastLoadTime) < CACHE_DURATION) {
+            console.log('✅ 使用快取資料');
+            renderFromCache();
+            return;
+        }
+        
         // 使用發布的 CSV 網址
         const response = await fetch(SHEET_CONFIG.CSV_URL);
         const csvText = await response.text();
@@ -182,17 +194,11 @@ async function loadGirlsData() {
             }
         }
         
-        console.log('✅ 載入完成！');
-        console.log('總共找到:', girlsData.length, '位妹妹');
-        console.log('桃園區:', girlsData.filter(g => g.area === '桃園').length, '位');
-        console.log('中壢區:', girlsData.filter(g => g.area === '中壢').length, '位');
-        console.log('前5筆資料:', girlsData.slice(0, 5).map(g => ({
-            keyword: g.keyword,
-            name: g.name,
-            area: g.area,
-            row: g.rowNumber,
-            hasImage: !!g.image
-        })));
+        console.log('✅ 載入完成！總共找到:', girlsData.length, '位妹妹');
+        
+        // 儲存快取
+        cachedData = girlsData;
+        lastLoadTime = Date.now();
         
         // 渲染圖片
         renderGallery();
@@ -204,10 +210,17 @@ async function loadGirlsData() {
             <div class="error-message">
                 <p>⚠️ 資料載入失敗</p>
                 <p>請稍後再試或聯絡管理員</p>
-                <button onclick="loadGirlsData()" class="retry-btn">重新載入</button>
+                <button onclick="loadGirlsData(true)" class="retry-btn">重新載入</button>
             </div>
         `;
     }
+}
+
+// 從快取渲染
+function renderFromCache() {
+    girlsData = cachedData;
+    renderGallery();
+    updateTabCounts();
 }
 
 // 簡單的 CSV 解析器
@@ -308,7 +321,7 @@ function renderGallery() {
                     </div>
                 ` : ''}
                 <div class="girl-image ${videoUrl ? 'active' : ''}">
-                    <img src="${imageUrl}" alt="${girl.name}" loading="lazy" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x600/764ba2/ffffff?text=${encodeURIComponent(girl.name)}'">
+                    <img src="${imageUrl}" alt="${girl.name}" loading="eager" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x600/764ba2/ffffff?text=${encodeURIComponent(girl.name)}'">
                 </div>
                 ${videoUrl ? `
                     <div class="girl-video">
@@ -329,7 +342,7 @@ function renderGallery() {
                 </div>
                 <div class="girl-actions">
                     ${girl.download ? 
-                        `<a href="${girl.download}" class="download-btn" target="_blank" onclick="event.stopPropagation();">📥 照影下載</a>` : 
+                        `<button class="download-btn" data-url="${girl.download}" onclick="event.stopPropagation();">📥 照影下載</button>` : 
                         `<button class="download-btn disabled" onclick="event.stopPropagation();" disabled>📥 照影下載</button>`
                     }
                     <a href="https://line.me/ti/p/uIhuzkYEr-" class="book-btn" target="_blank" onclick="event.stopPropagation();">立即報班</a>
@@ -354,6 +367,15 @@ function renderGallery() {
             copyBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 copyToClipboard(girl.info, copyBtn);
+            });
+        }
+        
+        // 添加照影下載按鈕事件（小窗口打開）
+        const downloadBtn = galleryItem.querySelector('.download-btn:not(.disabled)');
+        if (downloadBtn && downloadBtn.dataset.url) {
+            downloadBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openPhotoWindow(downloadBtn.dataset.url);
             });
         }
         
@@ -388,6 +410,19 @@ function renderGallery() {
     
     // 重新初始化燈箱功能
     initLightbox();
+}
+
+// 開啟照片下載小窗口（Google Drive 不支援 iframe，所以用小窗口）
+function openPhotoWindow(url) {
+    // 計算窗口位置（置中）
+    const width = 1000;
+    const height = 800;
+    const left = (window.screen.width - width) / 2;
+    const top = (window.screen.height - height) / 2;
+    
+    // 開啟小窗口（而不是新分頁）
+    const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`;
+    window.open(url, 'PhotoDownload', features);
 }
 
 // 複製文案到剪貼簿

@@ -1029,6 +1029,13 @@ body {
 .loading-message p {
     font-size: 1.3rem;
     opacity: 0.9;
+    margin-bottom: 10px;
+}
+
+.loading-tip {
+    font-size: 1rem !important;
+    opacity: 0.7 !important;
+    margin-top: 5px;
 }
 
 /* 錯誤訊息 */
