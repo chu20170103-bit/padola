@@ -843,9 +843,10 @@ body {
 .girl-header {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     margin-bottom: 12px;
     position: relative;
+    flex-wrap: wrap;
 }
 
 .badge {
@@ -891,6 +892,36 @@ body {
 .copy-btn.copied {
     background: rgba(16, 185, 129, 0.3);
     border-color: rgba(16, 185, 129, 0.5);
+}
+
+.copy-plus5-btn {
+    min-width: 50px;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    border: 2px solid rgba(245, 158, 11, 0.5);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.copy-plus5-btn:hover {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border-color: rgba(239, 68, 68, 0.8);
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.5);
+}
+
+.copy-plus5-btn.copied {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-color: rgba(16, 185, 129, 0.8);
 }
 
 .copy-icon {
@@ -1799,6 +1830,13 @@ body {
     .copy-btn {
         width: 30px;
         height: 30px;
+    }
+    
+    .copy-plus5-btn {
+        min-width: 45px;
+        height: 30px;
+        padding: 0 8px;
+        font-size: 0.7rem;
     }
     
     .features-grid {

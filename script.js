@@ -336,6 +336,9 @@ function renderGallery() {
                     <button class="copy-btn" data-info="${escapeHtml(girl.info)}" title="複製文案">
                         <span class="copy-icon">📋</span>
                     </button>
+                    <button class="copy-plus5-btn" data-info="${escapeHtml(girl.info)}" title="+5方案複製">
+                        <span class="copy-icon">📋+5</span>
+                    </button>
                 </div>
                 <div class="girl-info">
                     ${infoText}
@@ -367,6 +370,15 @@ function renderGallery() {
             copyBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 copyToClipboard(girl.info, copyBtn);
+            });
+        }
+        
+        // 添加+5方案複製按鈕事件
+        const copyPlus5Btn = galleryItem.querySelector('.copy-plus5-btn');
+        if (copyPlus5Btn) {
+            copyPlus5Btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                copyToClipboardPlus5(girl.info, copyPlus5Btn);
             });
         }
         
@@ -435,6 +447,41 @@ function copyToClipboard(text, button) {
         
         // 顯示提示訊息
         showToast('✅ 文案已複製！');
+        
+        // 2秒後恢復原狀
+        setTimeout(() => {
+            button.innerHTML = originalIcon;
+            button.classList.remove('copied');
+        }, 2000);
+    }).catch(err => {
+        console.error('複製失敗:', err);
+        showToast('❌ 複製失敗，請重試');
+    });
+}
+
+// 複製文案到剪貼簿（+5方案版本）
+function copyToClipboardPlus5(text, button) {
+    // 將 "回 X.X" 格式轉換為 "$XXXX" 格式
+    // 公式：(回本 + 0.5) × 1000 = 最終價格
+    const plus5Text = text.replace(/💲(\d+)🕸(\d+)S回\s*([\d.]+)/g, (match, minutes, shots, basePrice) => {
+        const base = parseFloat(basePrice);
+        const finalPrice = Math.round((base + 0.5) * 1000);
+        return `💲${minutes}🕸${shots}S $${finalPrice}`;
+    });
+    
+    copyTextToClipboard(plus5Text, button, '✅ 文案已複製（+5方案）！');
+}
+
+// 通用複製文字函數
+function copyTextToClipboard(text, button, message) {
+    navigator.clipboard.writeText(text).then(() => {
+        // 顯示複製成功提示
+        const originalIcon = button.innerHTML;
+        button.innerHTML = '<span class="copy-icon">✓</span>';
+        button.classList.add('copied');
+        
+        // 顯示提示訊息
+        showToast(message);
         
         // 2秒後恢復原狀
         setTimeout(() => {
