@@ -5,8 +5,9 @@ const scheduleTextTaoyuan = document.getElementById('scheduleTextTaoyuan');
 const scheduleTextZhongli = document.getElementById('scheduleTextZhongli');
 const updateTimeSpan = document.getElementById('updateTime');
 
-// 自動刷新間隔（毫秒）- 30 秒
-const REFRESH_INTERVAL = 30000;
+// 自動刷新間隔（毫秒）
+const SCHEDULE_REFRESH_INTERVAL = 60000;  // 時刻表：1 分鐘更新一次
+const GIRLS_REFRESH_INTERVAL = 300000;    // 妹妹資料：5 分鐘更新一次
 
 // 格式化時刻表文字
 function formatScheduleText(text) {
@@ -131,7 +132,7 @@ async function loadSchedule() {
 // 載入資料（帶快取）
 let cachedData = null;
 let lastLoadTime = 0;
-const CACHE_DURATION = 60000; // 快取 60 秒
+const CACHE_DURATION = 300000; // 快取 5 分鐘（減少重複載入）
 
 async function loadGirlsData(forceReload = false) {
     try {
@@ -321,7 +322,7 @@ function renderGallery() {
                     </div>
                 ` : ''}
                 <div class="girl-image ${videoUrl ? 'active' : ''}">
-                    <img src="${imageUrl}" alt="${girl.name}" loading="eager" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x600/764ba2/ffffff?text=${encodeURIComponent(girl.name)}'">
+                    <img src="${imageUrl}" alt="${girl.name}" loading="lazy" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x600/764ba2/ffffff?text=${encodeURIComponent(girl.name)}'">
                 </div>
                 ${videoUrl ? `
                     <div class="girl-video">
@@ -749,17 +750,25 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 
 // ========== 頁面載入 ==========
 window.addEventListener('load', () => {
-    // 載入資料
+    // 初始載入資料
     loadGirlsData();
     loadSchedule();
     
-    // 設定自動刷新時刻表（每 30 秒）
+    // 設定時刻表自動刷新（1 分鐘）
     setInterval(() => {
         console.log('🔄 自動刷新時刻表...');
         loadSchedule();
-    }, REFRESH_INTERVAL);
+    }, SCHEDULE_REFRESH_INTERVAL);
     
-    console.log(`⏰ 已設定自動刷新：每 ${REFRESH_INTERVAL / 1000} 秒更新一次時刻表`);
+    // 設定妹妹資料自動刷新（5 分鐘）
+    setInterval(() => {
+        console.log('🔄 自動刷新妹妹資料...');
+        loadGirlsData();
+    }, GIRLS_REFRESH_INTERVAL);
+    
+    console.log(`⏰ 已設定自動刷新：`);
+    console.log(`   📋 時刻表：每 ${SCHEDULE_REFRESH_INTERVAL / 1000} 秒`);
+    console.log(`   👧 妹妹資料：每 ${GIRLS_REFRESH_INTERVAL / 1000} 秒`);
 });
 
 // ========== 滾動顯示動畫 ==========
