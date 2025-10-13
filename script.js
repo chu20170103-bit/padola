@@ -5,9 +5,18 @@ const scheduleTextTaoyuan = document.getElementById('scheduleTextTaoyuan');
 const scheduleTextZhongli = document.getElementById('scheduleTextZhongli');
 const updateTimeSpan = document.getElementById('updateTime');
 
-// 自動刷新間隔（毫秒）
-const SCHEDULE_REFRESH_INTERVAL = 60000;  // 時刻表：1 分鐘更新一次
-const GIRLS_REFRESH_INTERVAL = 300000;    // 妹妹資料：5 分鐘更新一次
+// 自動刷新間隔（毫秒）- 只刷新時刻表
+const SCHEDULE_REFRESH_INTERVAL = 60000;  // 時刻表：1 分鐘更新一次（避免超過 API 限制）
+
+// ========== 防刷新攻擊機制 ==========
+let lastScheduleLoadTime = 0;          // 上次載入時刻表的時間
+let lastGirlsLoadTime = 0;             // 上次載入妹妹資料的時間
+const MIN_SCHEDULE_INTERVAL = 5000;    // 最小間隔：5秒（正常用戶手動刷新也不會這麼快）
+const MIN_GIRLS_INTERVAL = 15000;      // 最小間隔：15秒（放寬限制）
+let failedAttempts = 0;                // 失敗次數計數器
+const MAX_FAILED_ATTEMPTS = 10;        // 最大失敗次數（連續10次才封鎖）
+let isBlocked = false;                 // 是否被封鎖
+let isFirstLoad = true;                // 是否首次載入（首次載入不受限制）
 
 // 格式化時刻表文字
 function formatScheduleText(text) {
@@ -96,7 +105,68 @@ function splitSchedule(text) {
 
 // 載入最新時刻表（E1 欄位）
 async function loadSchedule() {
+    // 防刷新保護：檢查是否被封鎖
+    if (isBlocked) {
+        console.warn('⛔ 系統偵測到異常行為，已暫時封鎖請求');
+        scheduleTextTaoyuan.innerHTML = '<p style="color: #ef4444;">🚫 訪問已被限制</p><p style="font-size: 0.85rem;">請稍候片刻</p>';
+        scheduleTextZhongli.innerHTML = '<p style="color: #ef4444;">🚫 訪問已被限制</p><p style="font-size: 0.85rem;">請稍候片刻</p>';
+        return;
+    }
+    
+    // 防刷新保護：檢查請求間隔（首次載入不限制）
+    const now = Date.now();
+    const timeSinceLastLoad = now - lastScheduleLoadTime;
+    
+    if (!isFirstLoad && lastScheduleLoadTime > 0 && timeSinceLastLoad < MIN_SCHEDULE_INTERVAL) {
+        const remainingTime = Math.ceil((MIN_SCHEDULE_INTERVAL - timeSinceLastLoad) / 1000);
+        console.warn(`⚠️ 請求過於頻繁，請等待 ${remainingTime} 秒後再試`);
+        
+        // 顯示快取的時刻表（如果有的話）
+        scheduleTextTaoyuan.innerHTML = '<p>⏳ 請稍候 ' + remainingTime + ' 秒...</p>';
+        scheduleTextZhongli.innerHTML = '<p>⏳ 請稍候 ' + remainingTime + ' 秒...</p>';
+        
+        failedAttempts++;
+        
+        // 第 5 次警告時顯示友善提示
+        if (failedAttempts === 5) {
+            alert('⚠️ 系統提醒\n\n您的操作過於頻繁，請稍等片刻再重新整理。\n\n時刻表會自動更新，無需手動刷新。');
+        }
+        
+        // 如果失敗次數過多，封鎖 2 分鐘並彈窗警告
+        if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+            isBlocked = true;
+            console.error('🚫 偵測到異常刷新行為，已暫時封鎖 2 分鐘');
+            
+            // 顯示封鎖訊息
+            scheduleTextTaoyuan.innerHTML = '<p style="color: #ef4444;">🚫 訪問已被限制</p><p style="font-size: 0.85rem;">2 分鐘後自動解除</p>';
+            scheduleTextZhongli.innerHTML = '<p style="color: #ef4444;">🚫 訪問已被限制</p><p style="font-size: 0.85rem;">2 分鐘後自動解除</p>';
+            
+            // 彈窗警告
+            alert('🚫 系統安全警告\n\n' +
+                  '偵測到異常刷新行為！\n' +
+                  '您的訪問已被暫時限制 2 分鐘。\n\n' +
+                  '請注意：\n' +
+                  '• 時刻表每 1 分鐘自動更新\n' +
+                  '• 過度刷新會影響系統穩定性\n' +
+                  '• 如有需要請聯繫客服\n\n' +
+                  '2 分鐘後將自動解除限制。');
+            
+            setTimeout(() => {
+                isBlocked = false;
+                failedAttempts = 0;
+                console.log('✅ 封鎖已解除，歡迎繼續使用');
+                // 解除封鎖後自動重新載入
+                loadSchedule();
+            }, 120000); // 2 分鐘後解封
+        }
+        return;
+    }
+    
     try {
+        lastScheduleLoadTime = now;
+        failedAttempts = 0; // 成功請求，重置失敗次數
+        isFirstLoad = false; // 標記首次載入完成
+        
         const response = await fetch(SHEET_CONFIG.CSV_URL);
         const csvText = await response.text();
         const rows = parseCSV(csvText);
@@ -124,8 +194,8 @@ async function loadSchedule() {
         }
     } catch (error) {
         console.error('載入時刻表失敗:', error);
-        scheduleTextTaoyuan.innerHTML = '<p>⚠️ 載入失敗</p>';
-        scheduleTextZhongli.innerHTML = '<p>⚠️ 載入失敗</p>';
+        scheduleTextTaoyuan.innerHTML = '<p style="color: #f59e0b;">⚠️ 載入失敗</p><p style="font-size: 0.85rem;">請稍後重試</p>';
+        scheduleTextZhongli.innerHTML = '<p style="color: #f59e0b;">⚠️ 載入失敗</p><p style="font-size: 0.85rem;">請稍後重試</p>';
     }
 }
 
@@ -135,14 +205,43 @@ let lastLoadTime = 0;
 const CACHE_DURATION = 300000; // 快取 5 分鐘（減少重複載入）
 
 async function loadGirlsData(forceReload = false) {
+    // 防刷新保護：檢查是否被封鎖
+    if (isBlocked) {
+        console.warn('⛔ 系統偵測到異常行為，已暫時封鎖請求');
+        galleryContainer.innerHTML = `
+            <div class="error-message">
+                <p>🚫 訪問已被限制</p>
+                <p style="font-size: 0.9rem;">請稍候片刻後重新整理頁面</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // 防刷新保護：檢查請求間隔
+    const now = Date.now();
+    const timeSinceLastLoad = now - lastGirlsLoadTime;
+    
+    if (!forceReload && lastGirlsLoadTime > 0 && timeSinceLastLoad < MIN_GIRLS_INTERVAL) {
+        const remainingTime = Math.ceil((MIN_GIRLS_INTERVAL - timeSinceLastLoad) / 1000);
+        console.warn(`⚠️ 妹妹資料請求過於頻繁，請等待 ${remainingTime} 秒後再試`);
+        
+        // 如果有快取，直接使用快取
+        if (cachedData) {
+            console.log('✅ 使用快取資料');
+            renderFromCache();
+        }
+        return;
+    }
+    
     try {
         // 如果有快取且未過期，直接使用快取
-        const now = Date.now();
         if (!forceReload && cachedData && (now - lastLoadTime) < CACHE_DURATION) {
             console.log('✅ 使用快取資料');
             renderFromCache();
             return;
         }
+        
+        lastGirlsLoadTime = now;
         
         // 使用發布的 CSV 網址
         const response = await fetch(SHEET_CONFIG.CSV_URL);
@@ -749,10 +848,17 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 });
 
 // ========== 頁面載入 ==========
-window.addEventListener('load', () => {
-    // 初始載入資料
-    loadGirlsData();
+// 使用 DOMContentLoaded 而非 load，加快首次載入速度
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('📱 開始載入資料...');
+    
+    // 立即載入時刻表（優先顯示）
     loadSchedule();
+    
+    // 使用 setTimeout 讓時刻表先顯示，再載入妹妹資料
+    setTimeout(() => {
+        loadGirlsData();
+    }, 100);
     
     // 設定時刻表自動刷新（1 分鐘）
     setInterval(() => {
@@ -760,15 +866,8 @@ window.addEventListener('load', () => {
         loadSchedule();
     }, SCHEDULE_REFRESH_INTERVAL);
     
-    // 設定妹妹資料自動刷新（5 分鐘）
-    setInterval(() => {
-        console.log('🔄 自動刷新妹妹資料...');
-        loadGirlsData();
-    }, GIRLS_REFRESH_INTERVAL);
-    
-    console.log(`⏰ 已設定自動刷新：`);
-    console.log(`   📋 時刻表：每 ${SCHEDULE_REFRESH_INTERVAL / 1000} 秒`);
-    console.log(`   👧 妹妹資料：每 ${GIRLS_REFRESH_INTERVAL / 1000} 秒`);
+    console.log(`⏰ 已設定自動刷新：時刻表每 ${SCHEDULE_REFRESH_INTERVAL / 1000} 秒更新一次`);
+    console.log(`💡 妹妹資料僅在頁面載入時更新（需要最新資料請重新整理頁面）`);
 });
 
 // ========== 滾動顯示動畫 ==========
