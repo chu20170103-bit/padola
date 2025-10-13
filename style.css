@@ -2704,6 +2704,10 @@ body {
         padding: 5px 8px;
         font-size: 0.8rem;
         margin: 3px 0;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 4px !important;
     }
     
     .area-tag {
@@ -3069,9 +3073,10 @@ body {
     .activity-girls {
         padding: 4px 6px;
         font-size: 0.75rem;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 4px !important;
         margin: 3px 0;
     }
     
