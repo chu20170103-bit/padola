@@ -18,6 +18,7 @@
                 <a href="#home" class="nav-link">首頁</a>
                 <a href="#gallery" class="nav-link">在班妹妹</a>
                 <a href="#about" class="nav-link">系統優勢</a>
+                <a href="#rules" class="nav-link">注意事項</a>
                 <a href="#contact" class="nav-link">立即報班</a>
             </div>
             <div class="hamburger" id="hamburger">
@@ -102,6 +103,31 @@
         </div>
     </section>
 
+    <!-- 熱門活動資訊 -->
+    <section class="hot-activity" id="activity">
+        <div class="container">
+            <div class="activity-banner">
+                <div class="activity-header" id="activityHeader">
+                    <div class="activity-title-group">
+                        <span class="hot-badge">🔥 HOT</span>
+                        <h2 class="activity-title">熱門活動資訊</h2>
+                    </div>
+                    <button class="activity-toggle" id="activityToggle" aria-label="展開活動資訊">
+                        <span class="toggle-icon">▼</span>
+                        <span class="toggle-text">展開詳情</span>
+                    </button>
+                </div>
+                <div class="activity-content-wrapper collapsed" id="activityContent">
+                    <!-- 載入中提示 -->
+                    <div class="activity-loading">
+                        <div class="loader-small"></div>
+                        <p style="color: rgba(255, 255, 255, 0.7); margin-top: 10px;">載入活動資訊中...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- 圖片展示區 -->
     <section class="gallery-section" id="gallery">
         <div class="container">
@@ -176,6 +202,31 @@
         </div>
     </section>
 
+    <!-- 注意事項與規範 -->
+    <section class="rules-section" id="rules">
+        <div class="container">
+            <div class="rules-banner">
+                <div class="rules-header" id="rulesHeader">
+                    <div class="rules-title-group">
+                        <span class="rules-badge">📋</span>
+                        <h2 class="rules-title">注意事項與規範</h2>
+                    </div>
+                    <button class="rules-toggle" id="rulesToggle" aria-label="展開注意事項">
+                        <span class="toggle-icon">▼</span>
+                        <span class="toggle-text">展開詳情</span>
+                    </button>
+                </div>
+                <div class="rules-content-wrapper collapsed" id="rulesContent">
+                    <!-- 載入中提示 -->
+                    <div class="rules-loading">
+                        <div class="loader-small"></div>
+                        <p style="color: rgba(255, 255, 255, 0.7); margin-top: 10px;">載入注意事項中...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- 聯絡我們 -->
     <section class="contact" id="contact">
         <div class="container">
@@ -216,6 +267,31 @@
             <button class="nav-btn prev-btn" id="prev-btn">&#10094;</button>
             <button class="nav-btn next-btn" id="next-btn">&#10095;</button>
         </div>
+
+    <!-- 地址&停車場浮框 -->
+    <div class="address-modal" id="addressModal">
+        <div class="address-modal-overlay" id="addressModalOverlay"></div>
+        <div class="address-modal-content">
+            <button class="address-modal-close" id="addressModalClose">&times;</button>
+            <h3 class="address-modal-title" id="addressModalTitle">🚘 地址 & 停車場資訊</h3>
+            <div class="address-modal-body">
+                <!-- 圖片區域 -->
+                <div class="address-image-section">
+                    <img id="addressImage" src="" alt="地址圖片" class="address-image">
+                    <button class="address-copy-btn" id="copyImageBtn" title="複製圖片連結">
+                        <span class="copy-icon">📋</span> 複製圖片
+                    </button>
+                </div>
+                <!-- 內容區域 -->
+                <div class="address-content-section">
+                    <div id="addressContent" class="address-content"></div>
+                    <button class="address-copy-btn" id="copyContentBtn" title="複製內容">
+                        <span class="copy-icon">📋</span> 複製內容
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
     <!-- 頁腳 -->

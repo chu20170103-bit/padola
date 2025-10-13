@@ -4,6 +4,14 @@ const galleryContainer = document.getElementById('galleryContainer');
 const scheduleTextTaoyuan = document.getElementById('scheduleTextTaoyuan');
 const scheduleTextZhongli = document.getElementById('scheduleTextZhongli');
 const updateTimeSpan = document.getElementById('updateTime');
+const activityContent = document.getElementById('activityContent');
+const rulesContent = document.getElementById('rulesContent');
+
+// 地址資料儲存
+let addressData = {
+    taoyuan: { image: '', text: '' },
+    zhongli: { image: '', text: '' }
+};
 
 // 自動刷新間隔（毫秒）- 只刷新時刻表
 const SCHEDULE_REFRESH_INTERVAL = 60000;  // 時刻表：1 分鐘更新一次（避免超過 API 限制）
@@ -69,9 +77,9 @@ function formatScheduleText(text) {
     
     // 替換特殊符號和關鍵字為 HTML 標籤
     formatted = formatted
-        // 先處理地址&停車場官方輸入【A】或【B】 → 加上連結和雙換行
+        // 先處理地址&停車場官方輸入【A】或【B】 → 改為彈出浮框
         .replace(/🚘地址&停車場輸入【([AB])】/g, (match, letter) => {
-            return `🚘<a href="https://line.me/R/ti/p/@301jxtvh" target="_blank" class="sch-link">地址&停車場官方輸入<span class="sch-title-link">【${letter}】</span></a><br><br>`;
+            return `🚘<a href="javascript:void(0);" class="sch-link address-trigger" data-letter="${letter}">地址&停車場官方輸入<span class="sch-title-link">【${letter}】</span></a><br><br>`;
         })
         // 【桃園區】【中壢區】等區域標題
         .replace(/【(桃園區|中壢區)】/g, '<span class="sch-title">【$1】</span>')
@@ -93,6 +101,127 @@ function formatScheduleText(text) {
         .replace(/(\d{4})(?![0-9])/g, '<span class="sch-time">$1</span>')
         // 換行
         .replace(/\n/g, '<br>');
+    
+    return formatted;
+}
+
+// 格式化活動資訊文字
+function formatActivityText(text) {
+    if (!text) return '<p style="color: rgba(255, 255, 255, 0.6);">暫無活動資訊</p>';
+    
+    let formatted = text;
+    
+    // 移除不需要的 Google Drive 連結
+    formatted = formatted
+        .replace(/.*?https?:\/\/drive\.google\.com[^\n]*/gi, '')
+        .trim();
+    
+    // 替換關鍵字和格式
+    formatted = formatted
+        // 日期格式高亮
+        .replace(/(日期[:：])([^\n]+)/g, '<div class="activity-date">📅 $1<strong>$2</strong></div>')
+        // 活動妹妹標題
+        .replace(/(活動妹妹[:：])/g, '<div class="activity-section-title">🎉 $1</div>')
+        // 中壢活動妹妹（妹妹名字變成可點擊跳轉）
+        .replace(/(中壢活動妹妹)【([^】]+)】/g, function(match, prefix, names) {
+            const nameLinks = names.split(/[.、，,]/).map(name => {
+                const trimmedName = name.trim();
+                if (trimmedName) {
+                    return `<a href="#girl-${trimmedName.replace(/\s+/g, '-')}" class="girl-name-link" data-girl-name="${trimmedName}">${trimmedName}</a>`;
+                }
+                return '';
+            }).filter(link => link).join('、');
+            return `<div class="activity-girls"><span class="area-tag zhongli">💎 中壢區</span>${nameLinks}</div>`;
+        })
+        // 桃園活動妹妹（妹妹名字變成可點擊跳轉）
+        .replace(/(桃園活動妹妹)【([^】]+)】/g, function(match, prefix, names) {
+            const nameLinks = names.split(/[.、，,]/).map(name => {
+                const trimmedName = name.trim();
+                if (trimmedName) {
+                    return `<a href="#girl-${trimmedName.replace(/\s+/g, '-')}" class="girl-name-link" data-girl-name="${trimmedName}">${trimmedName}</a>`;
+                }
+                return '';
+            }).filter(link => link).join('、');
+            return `<div class="activity-girls"><span class="area-tag taoyuan">🌸 桃園區</span>${nameLinks}</div>`;
+        })
+        // 退水方案標題
+        .replace(/(退水方案[:：])/g, '<div class="activity-section-title">💰 $1</div>')
+        // 條件限制標題
+        .replace(/(條件限制[:：])/g, '<div class="activity-section-title">📋 $1</div>')
+        // 驗證公告標題
+        .replace(/「(.+?)」/g, '<div class="activity-section-title">🔔 $1</div>')
+        // 退水金額高亮
+        .replace(/(\d+退水)/g, '<span class="highlight-money">$1</span>')
+        // 時間方案高亮
+        .replace(/(\d+分鐘方案)/g, '<span class="highlight-time">$1</span>')
+        // 短工/長工標記
+        .replace(/(短工|長工)/g, '<span class="work-type">$1</span>')
+        // LINE 官方連結處理
+        .replace(/(✅.+?[:：]\s*)(@[\w]+)/g, '$1<a href="https://line.me/ti/p/$2" target="_blank" class="activity-link">$2</a>')
+        .replace(/👉\s*(https:\/\/lin\.ee\/[\w]+)/g, '👉 <a href="$1" target="_blank" class="activity-link">點此加入官方</a>')
+        // 換行處理
+        .replace(/\n/g, '<br>');
+    
+    return formatted;
+}
+
+// 格式化注意事項文字
+function formatRulesText(text) {
+    if (!text) {
+        console.warn('⚠️ formatRulesText: 沒有輸入文字');
+        return '<p style="color: rgba(255, 255, 255, 0.6);">暫無注意事項</p>';
+    }
+    
+    console.log('🔧 格式化前原始文字（前100字）:', text.substring(0, 100));
+    
+    let formatted = text;
+    
+    // 移除不需要的 Google Drive 連結
+    formatted = formatted
+        .replace(/.*?https?:\/\/drive\.google\.com[^\n]*/gi, '')
+        .trim();
+    
+    // 替換關鍵字和格式（重要：順序很重要，先處理連結和特殊格式，再處理符號）
+    formatted = formatted
+        // 【標題】格式
+        .replace(/【(.+?)】/g, '<div class="rules-section-title">📌 $1</div>')
+        // 「公告標題」格式（用引號）
+        .replace(/「(.+?)」/g, '<div class="rules-section-title">🔔 $1</div>')
+        // 段落標題（獨立一行，15字以內，不含標點結尾）
+        .replace(/^([^\n]{2,15})$/gm, function(match) {
+            // 排除太長的句子或包含具體內容的行
+            if (match.includes('元') || match.includes('：') || match.includes('、') || match.length > 15 || match.includes('@') || match.includes('http')) {
+                return match;
+            }
+            return '<div class="rules-section-title">📋 ' + match + '</div>';
+        })
+        // ====== 先處理連結（避免被後續替換破壞）======
+        // LINE 完整連結改為按鈕樣式
+        .replace(/(https?:\/\/lin\.ee\/[\w]+)/gi, '<a href="$1" target="_blank" class="rules-button">📱 點此加入官方</a>')
+        // LINE ID 格式（@開頭），避免匹配已經在 HTML 標籤中的
+        .replace(/(?<!href="|>)(@[\w]+)(?!<)/g, '<a href="https://line.me/ti/p/$1" target="_blank" class="rules-button-small">$1</a>')
+        // ====== 再處理符號和關鍵字 ======
+        // Emoji 符號高亮（在其他替換之前）
+        .replace(/⚠️/g, '<span class="rules-warning">⚠️</span>')
+        .replace(/❗/g, '<span class="rules-important">❗</span>')
+        .replace(/✅/g, '<span class="rules-check">✅</span>')
+        .replace(/❌(?!<\/span>)/g, '<span class="rules-cross">❌</span>')
+        .replace(/👉/g, '<span class="rules-check">👉</span>')
+        // 罰款金額高亮（xxxx元）
+        .replace(/(\d{3,5})元/g, '<span class="rules-highlight">💰 $1元</span>')
+        // 禁止詞高亮（避免重複替換已經有標籤的）
+        .replace(/(?<!">)(禁止|不接|不可|嚴禁)(?!<)/g, '<span class="rules-cross">$1</span>')
+        // 罰則關鍵字
+        .replace(/(?<!">)(罰|賠償|損失)(?!<)/g, '<span class="rules-important">$1</span>')
+        // 編號列表（1. 2. 3.）
+        .replace(/^(\d+[\.\、])\s*(.+?)$/gm, '<div class="rules-list-item"><span class="rules-number">$1</span><span>$2</span></div>')
+        // 重點文字（** 或 __ 包圍）
+        .replace(/\*\*(.+?)\*\*/g, '<strong class="rules-highlight">$1</strong>')
+        .replace(/__(.+?)__/g, '<strong class="rules-highlight">$1</strong>')
+        // 換行處理
+        .replace(/\n/g, '<br>');
+    
+    console.log('🔧 格式化後 HTML（前200字）:', formatted.substring(0, 200));
     
     return formatted;
 }
@@ -216,6 +345,56 @@ async function loadSchedule() {
         } else {
             scheduleTextTaoyuan.innerHTML = '<p>⚠️ 無法載入資料</p>';
             scheduleTextZhongli.innerHTML = '<p>⚠️ 無法載入資料</p>';
+        }
+        
+        // 讀取 F1（第1行第6欄，索引[0][5]）- 熱門活動資訊
+        if (rows && rows.length > 0 && rows[0].length > 5 && activityContent) {
+            const activityData = rows[0][5];
+            if (activityData && activityData.trim()) {
+                activityContent.innerHTML = formatActivityText(activityData);
+                console.log('✅ 活動資訊更新成功');
+            }
+        }
+        
+        // 讀取 G1（第1行第7欄，索引[0][6]）- 注意事項與規範
+        if (rows && rows.length > 0 && rows[0].length > 6 && rulesContent) {
+            const rulesData = rows[0][6];
+            console.log('📋 G1 原始資料:', rulesData ? rulesData.substring(0, 100) : '空白');
+            if (rulesData && rulesData.trim()) {
+                const formattedRules = formatRulesText(rulesData);
+                rulesContent.innerHTML = formattedRules;
+                console.log('✅ 注意事項更新成功');
+                console.log('📋 格式化後（前200字）:', formattedRules.substring(0, 200));
+            } else {
+                rulesContent.innerHTML = '<p style="color: rgba(255, 255, 255, 0.6);">目前沒有注意事項</p>';
+                console.log('⚠️ G1 欄位無資料');
+            }
+        } else {
+            console.log('⚠️ 無法讀取 G1 或 rulesContent 元素不存在');
+            if (rulesContent) {
+                rulesContent.innerHTML = '<p style="color: rgba(255, 255, 255, 0.6);">載入注意事項失敗</p>';
+            }
+        }
+        
+        // 讀取地址資料（H1, H2：中壢；I1, I2：桃園）
+        if (rows && rows.length > 0) {
+            // 中壢地址（H1=圖片, H2=內容）
+            if (rows[0].length > 7) {
+                addressData.zhongli.image = rows[0][7] ? rows[0][7].trim() : '';
+            }
+            if (rows[1] && rows[1].length > 7) {
+                addressData.zhongli.text = rows[1][7] ? rows[1][7].trim() : '';
+            }
+            
+            // 桃園地址（I1=圖片, I2=內容）
+            if (rows[0].length > 8) {
+                addressData.taoyuan.image = rows[0][8] ? rows[0][8].trim() : '';
+            }
+            if (rows[1] && rows[1].length > 8) {
+                addressData.taoyuan.text = rows[1][8] ? rows[1][8].trim() : '';
+            }
+            
+            console.log('✅ 地址資料載入成功:', addressData);
         }
     } catch (error) {
         console.error('載入時刻表失敗:', error);
@@ -398,14 +577,72 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// 轉換 Google Drive 圖片連結為直連格式
+function convertDriveImageUrl(url) {
+    if (!url) return null;
+    
+    // 如果已經是直連格式，直接返回
+    if (url.includes('/uc?id=') || url.includes('/thumbnail?id=')) {
+        return url;
+    }
+    
+    // 從各種 Google Drive 連結格式中提取 file ID
+    let fileId = null;
+    
+    // 格式 1: /file/d/{fileId}/view
+    const match1 = url.match(/\/file\/d\/([^\/\?]+)/);
+    if (match1) {
+        fileId = match1[1];
+    }
+    
+    // 格式 2: id={fileId}
+    const match2 = url.match(/[?&]id=([^&]+)/);
+    if (!fileId && match2) {
+        fileId = match2[1];
+    }
+    
+    // 格式 3: open?id={fileId}
+    const match3 = url.match(/open\?id=([^&]+)/);
+    if (!fileId && match3) {
+        fileId = match3[1];
+    }
+    
+    // 如果找到 fileId，返回直連格式
+    if (fileId) {
+        return `https://drive.google.com/uc?id=${fileId}`;
+    }
+    
+    // 如果都不是 Google Drive 連結，直接返回原連結
+    return url;
+}
+
 // 轉換 Google Drive 影片連結為嵌入格式
 function convertDriveVideoUrl(url) {
     if (!url) return null;
     
-    // 從 Google Drive 連結中提取 file ID
-    const match = url.match(/\/file\/d\/([^\/]+)/);
-    if (match) {
-        const fileId = match[1];
+    // 從各種 Google Drive 連結格式中提取 file ID
+    let fileId = null;
+    
+    // 格式 1: /file/d/{fileId}/view 或 /file/d/{fileId}
+    const match1 = url.match(/\/file\/d\/([^\/\?]+)/);
+    if (match1) {
+        fileId = match1[1];
+    }
+    
+    // 格式 2: id={fileId}
+    const match2 = url.match(/[?&]id=([^&]+)/);
+    if (!fileId && match2) {
+        fileId = match2[1];
+    }
+    
+    // 格式 3: open?id={fileId}
+    const match3 = url.match(/open\?id=([^&]+)/);
+    if (!fileId && match3) {
+        fileId = match3[1];
+    }
+    
+    // 如果找到 fileId，返回 preview 格式
+    if (fileId) {
         return `https://drive.google.com/file/d/${fileId}/preview`;
     }
     
@@ -414,7 +651,9 @@ function convertDriveVideoUrl(url) {
         return url;
     }
     
-    return url;
+    // 如果都不是，返回 null 避免錯誤
+    console.warn('⚠️ 無法轉換影片連結:', url);
+    return null;
 }
 
 // 渲染圖片展示
@@ -434,8 +673,11 @@ function renderGallery() {
         const galleryItem = document.createElement('div');
         galleryItem.className = 'gallery-item';
         galleryItem.setAttribute('data-category', girl.area);
+        // 添加唯一 ID，用於跳轉定位
+        galleryItem.id = `girl-${girl.name.replace(/\s+/g, '-')}`;
         
-        const imageUrl = girl.image || `https://via.placeholder.com/400x600/667eea/ffffff?text=${encodeURIComponent(girl.name)}`;
+        // 轉換圖片和影片連結為正確格式
+        const imageUrl = girl.image ? convertDriveImageUrl(girl.image) : `https://via.placeholder.com/400x600/667eea/ffffff?text=${encodeURIComponent(girl.name)}`;
         const videoUrl = girl.video ? convertDriveVideoUrl(girl.video) : null;
         
         // 處理妹妹資訊文字（保留換行）
@@ -876,10 +1118,355 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
+// ========== 活動資訊收合功能 ==========
+function initActivityToggle() {
+    const toggleBtn = document.getElementById('activityToggle');
+    const activityContent = document.getElementById('activityContent');
+    const activityHeader = document.getElementById('activityHeader');
+    
+    if (!toggleBtn || !activityContent) return;
+    
+    // 點擊標題區也可以展開/收合
+    activityHeader.addEventListener('click', (e) => {
+        // 如果點擊的是按鈕本身，不要重複處理
+        if (e.target.closest('.activity-toggle')) return;
+        toggleActivity();
+    });
+    
+    // 點擊按鈕展開/收合
+    toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // 防止觸發標題的點擊事件
+        toggleActivity();
+    });
+    
+    function toggleActivity() {
+        const isCollapsed = activityContent.classList.contains('collapsed');
+        
+        if (isCollapsed) {
+            // 展開
+            activityContent.classList.remove('collapsed');
+            toggleBtn.classList.add('expanded');
+            toggleBtn.querySelector('.toggle-text').textContent = '收起詳情';
+            console.log('✅ 活動資訊已展開');
+        } else {
+            // 收起
+            activityContent.classList.add('collapsed');
+            toggleBtn.classList.remove('expanded');
+            toggleBtn.querySelector('.toggle-text').textContent = '展開詳情';
+            console.log('📦 活動資訊已收起');
+        }
+    }
+}
+
+// ========== 注意事項收合功能 ==========
+function initRulesToggle() {
+    const toggleBtn = document.getElementById('rulesToggle');
+    const rulesContent = document.getElementById('rulesContent');
+    const rulesHeader = document.getElementById('rulesHeader');
+    
+    if (!toggleBtn || !rulesContent) return;
+    
+    // 點擊標題區也可以展開/收合
+    rulesHeader.addEventListener('click', (e) => {
+        // 如果點擊的是按鈕本身，不要重複處理
+        if (e.target.closest('.rules-toggle')) return;
+        toggleRules();
+    });
+    
+    // 點擊按鈕展開/收合
+    toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // 防止觸發標題的點擊事件
+        toggleRules();
+    });
+    
+    function toggleRules() {
+        const isCollapsed = rulesContent.classList.contains('collapsed');
+        
+        if (isCollapsed) {
+            // 展開
+            rulesContent.classList.remove('collapsed');
+            toggleBtn.classList.add('expanded');
+            toggleBtn.querySelector('.toggle-text').textContent = '收起詳情';
+            console.log('✅ 注意事項已展開');
+        } else {
+            // 收起
+            rulesContent.classList.add('collapsed');
+            toggleBtn.classList.remove('expanded');
+            toggleBtn.querySelector('.toggle-text').textContent = '展開詳情';
+            console.log('📦 注意事項已收起');
+        }
+    }
+}
+
+// ========== 妹妹名字跳转功能 ==========
+function initGirlNameLinks() {
+    // 使用事件委托，监听所有妹妹名字链接的点击
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('.girl-name-link');
+        if (link) {
+            e.preventDefault();
+            const girlName = link.getAttribute('data-girl-name');
+            const targetId = `girl-${girlName.replace(/\s+/g, '-')}`;
+            const targetCard = document.getElementById(targetId);
+            
+            if (targetCard) {
+                // 移除之前的高亮
+                document.querySelectorAll('.gallery-item.highlight').forEach(card => {
+                    card.classList.remove('highlight');
+                });
+                
+                // 滚动到目标卡片
+                targetCard.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+                
+                // 添加高亮效果
+                setTimeout(() => {
+                    targetCard.classList.add('highlight');
+                    // 2秒后自动移除高亮
+                    setTimeout(() => {
+                        targetCard.classList.remove('highlight');
+                    }, 2000);
+                }, 500);
+                
+                console.log(`✅ 跳转到妹妹卡片: ${girlName}`);
+            } else {
+                console.warn(`⚠️ 找不到妹妹卡片: ${girlName} (ID: ${targetId})`);
+            }
+        }
+    });
+}
+
+// ========== 地址&停車場浮框功能 ==========
+function initAddressModal() {
+    const modal = document.getElementById('addressModal');
+    const overlay = document.getElementById('addressModalOverlay');
+    const closeBtn = document.getElementById('addressModalClose');
+    const modalTitle = document.getElementById('addressModalTitle');
+    const addressImage = document.getElementById('addressImage');
+    const addressContent = document.getElementById('addressContent');
+    const copyImageBtn = document.getElementById('copyImageBtn');
+    const copyContentBtn = document.getElementById('copyContentBtn');
+    
+    if (!modal) return;
+    
+    // 使用事件委托處理所有地址觸發連結
+    document.addEventListener('click', (e) => {
+        const trigger = e.target.closest('.address-trigger');
+        if (trigger) {
+            e.preventDefault();
+            const letter = trigger.getAttribute('data-letter');
+            openAddressModal(letter);
+        }
+    });
+    
+    // 開啟浮框
+    function openAddressModal(letter) {
+        // 根據字母判斷區域
+        // A = 中壢區，B = 桃園區
+        let region = 'taoyuan'; // 預設桃園
+        
+        if (letter === 'A') {
+            region = 'zhongli';
+            modalTitle.innerHTML = '🚘 中壢區 - 地址 & 停車場資訊';
+        } else if (letter === 'B') {
+            region = 'taoyuan';
+            modalTitle.innerHTML = '🚘 桃園區 - 地址 & 停車場資訊';
+        }
+        
+        // 設定圖片（轉換為直連格式）
+        const imageUrl = convertDriveImageUrl(addressData[region].image);
+        const currentImage = document.getElementById('addressImage');
+        const imageSection = document.querySelector('.address-image-section');
+        
+        if (imageUrl && currentImage) {
+            currentImage.src = imageUrl;
+            currentImage.style.display = 'block';
+            
+            // 移除舊的點擊事件（使用 clone 技巧）
+            const newImage = currentImage.cloneNode(true);
+            currentImage.parentNode.replaceChild(newImage, currentImage);
+            
+            // 添加點擊放大功能（在浮框內放大，響應式）
+            let isZoomed = false;
+            const isMobile = window.innerWidth <= 768;
+            const normalHeight = isMobile ? (window.innerWidth <= 480 ? '180px' : '200px') : '250px';
+            const zoomedHeight = isMobile ? '400px' : '500px';
+            const sectionZoomedHeight = isMobile ? '450px' : '600px';
+            
+            newImage.addEventListener('click', () => {
+                if (!isZoomed) {
+                    // 放大
+                    newImage.style.maxHeight = zoomedHeight;
+                    if (imageSection) {
+                        imageSection.style.maxHeight = sectionZoomedHeight;
+                        imageSection.style.overflow = 'auto';
+                    }
+                    isZoomed = true;
+                } else {
+                    // 縮小回原狀
+                    newImage.style.maxHeight = normalHeight;
+                    if (imageSection) {
+                        imageSection.style.maxHeight = 'none';
+                        imageSection.style.overflow = 'visible';
+                    }
+                    isZoomed = false;
+                }
+            });
+        } else if (currentImage) {
+            currentImage.style.display = 'none';
+        }
+        
+        // 設定內容（保留換行）
+        const text = addressData[region].text;
+        if (text) {
+            addressContent.innerHTML = text.replace(/\n/g, '<br>');
+        } else {
+            addressContent.innerHTML = '<p style="color: rgba(255,255,255,0.6);">暫無地址資訊</p>';
+        }
+        
+        // 儲存當前資料到按鈕（使用轉換後的URL）
+        const finalImageUrl = convertDriveImageUrl(addressData[region].image);
+        copyImageBtn.setAttribute('data-url', finalImageUrl);
+        copyContentBtn.setAttribute('data-text', text);
+        
+        // 顯示浮框
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    // 關閉浮框
+    function closeAddressModal() {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+    
+    // 點擊關閉按鈕
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeAddressModal);
+    }
+    
+    // 點擊遮罩層
+    if (overlay) {
+        overlay.addEventListener('click', closeAddressModal);
+    }
+    
+    // ESC 鍵關閉
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeAddressModal();
+        }
+    });
+    
+    // 複製圖片（複製圖片本身到剪貼簿）
+    if (copyImageBtn) {
+        copyImageBtn.addEventListener('click', async () => {
+            const url = copyImageBtn.getAttribute('data-url');
+            if (url) {
+                try {
+                    const originalText = copyImageBtn.innerHTML;
+                    copyImageBtn.innerHTML = '<span class="copy-icon">⏳</span> 處理中...';
+                    
+                    // 使用 canvas 來處理圖片，避免 CORS 問題
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = reject;
+                        img.src = url;
+                    });
+                    
+                    // 創建 canvas 並繪製圖片
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // 轉換為 Blob
+                    const blob = await new Promise(resolve => {
+                        canvas.toBlob(resolve, 'image/png');
+                    });
+                    
+                    // 複製圖片到剪貼簿
+                    await navigator.clipboard.write([
+                        new ClipboardItem({
+                            'image/png': blob
+                        })
+                    ]);
+                    
+                    copyImageBtn.innerHTML = '<span class="copy-icon">✓</span> 已複製';
+                    copyImageBtn.classList.add('copied');
+                    showToast('✅ 圖片已複製到剪貼簿！');
+                    
+                    setTimeout(() => {
+                        copyImageBtn.innerHTML = originalText;
+                        copyImageBtn.classList.remove('copied');
+                    }, 2000);
+                } catch (err) {
+                    console.error('複製圖片失敗:', err);
+                    // 如果失敗，嘗試複製網址作為備案
+                    try {
+                        await navigator.clipboard.writeText(url);
+                        copyImageBtn.innerHTML = '<span class="copy-icon">✓</span> 已複製網址';
+                        showToast('⚠️ 圖片複製失敗，已複製圖片網址');
+                        setTimeout(() => {
+                            copyImageBtn.innerHTML = '<span class="copy-icon">📋</span> 複製圖片';
+                            copyImageBtn.classList.remove('copied');
+                        }, 2000);
+                    } catch (err2) {
+                        copyImageBtn.innerHTML = '<span class="copy-icon">❌</span> 複製失敗';
+                        showToast('❌ 複製失敗，請重試');
+                        setTimeout(() => {
+                            copyImageBtn.innerHTML = '<span class="copy-icon">📋</span> 複製圖片';
+                        }, 2000);
+                    }
+                }
+            }
+        });
+    }
+    
+    // 複製內容
+    if (copyContentBtn) {
+        copyContentBtn.addEventListener('click', () => {
+            const text = copyContentBtn.getAttribute('data-text');
+            if (text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    const originalText = copyContentBtn.innerHTML;
+                    copyContentBtn.innerHTML = '<span class="copy-icon">✓</span> 已複製';
+                    copyContentBtn.classList.add('copied');
+                    showToast('✅ 地址內容已複製！');
+                    setTimeout(() => {
+                        copyContentBtn.innerHTML = originalText;
+                        copyContentBtn.classList.remove('copied');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('複製失敗:', err);
+                    showToast('❌ 複製失敗，請重試');
+                });
+            }
+        });
+    }
+}
+
 // ========== 頁面載入 ==========
 // 使用 DOMContentLoaded 而非 load，加快首次載入速度
 document.addEventListener('DOMContentLoaded', () => {
     console.log('📱 開始載入資料...');
+    
+    // 初始化活動收合功能
+    initActivityToggle();
+    
+    // 初始化注意事項收合功能
+    initRulesToggle();
+    
+    // 初始化妹妹名字跳转功能
+    initGirlNameLinks();
+    
+    // 初始化地址浮框功能
+    initAddressModal();
     
     // 立即載入時刻表（優先顯示）
     loadSchedule();

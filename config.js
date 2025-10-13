@@ -9,7 +9,12 @@ const SHEET_CONFIG = {
         INFO: 1,         // B欄：妹妹資訊
         DOWNLOAD: 2,     // C欄：妹妹資料下載
         IMAGE: 3,        // D欄：妹妹照片
-        VIDEO: 4         // E欄：妹妹影片 ✅
+        VIDEO: 4,        // E欄：妹妹影片 ✅
+        ACTIVITY: 5,     // F欄：熱門活動資訊 ✅
+        RULES: 6,        // G欄：注意事項與規範 ✅
+        ZHONGLI_ADDRESS_IMAGE: 7,  // H欄（索引7）：中壢地址圖片（H1在第1行）
+        TAOYUAN_ADDRESS_IMAGE: 8   // I欄（索引8）：桃園地址圖片（I1在第1行）
+        // 注意：H2和I2的內容分別在第2行的索引[1][7]和[1][8]
     },
     
     // 掃描起始行（從第2行開始，索引1）
