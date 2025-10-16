@@ -102,6 +102,49 @@ function formatScheduleText(text) {
         // 換行
         .replace(/\n/g, '<br>');
     
+    // 將妹妹名稱轉換為可點擊的鏈接（在所有其他格式化完成後）
+    if (girlsData && girlsData.length > 0) {
+        console.log('🔗 開始處理時刻表名稱鏈接，共', girlsData.length, '位妹妹');
+        
+        // 按名稱長度排序（長到短），避免短名稱覆蓋長名稱
+        const sortedGirls = [...girlsData].sort((a, b) => b.name.length - a.name.length);
+        
+        let replacedCount = 0;
+        sortedGirls.forEach(girl => {
+            // 轉義特殊字符（用於正則表達式）
+            const escapedName = girl.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            
+            // 創建正則：匹配不在HTML標籤內的名稱
+            // 分段處理：先分割HTML標籤，只處理標籤外的文字
+            const parts = formatted.split(/(<[^>]+>)/);
+            
+            formatted = parts.map((part, index) => {
+                // 如果是HTML標籤（奇數索引），不處理
+                if (part.startsWith('<') && part.endsWith('>')) {
+                    return part;
+                }
+                
+                // 處理純文字部分
+                // 注意：中文不適用 \b，所以用更寬鬆的匹配，但要避免重複替換
+                const regex = new RegExp(`${escapedName}`, 'g');
+                
+                // 先檢查是否包含名稱，避免不必要的處理
+                if (!part.includes(girl.name)) {
+                    return part;
+                }
+                
+                return part.replace(regex, (match) => {
+                    replacedCount++;
+                    return `<a href="#girl-${girl.name.replace(/\s+/g, '-')}" class="girl-name-link sch-girl-name" data-girl-name="${girl.name}">${match}</a>`;
+                });
+            }).join('');
+        });
+        
+        console.log('✅ 時刻表名稱處理完成，共替換', replacedCount, '個名稱');
+    } else {
+        console.log('⚠️ girlsData 為空或未載入，無法處理時刻表名稱');
+    }
+    
     return formatted;
 }
 
@@ -332,6 +375,9 @@ async function loadSchedule() {
             // 分割桃園和中壢
             const { taoyuan, zhongli } = splitSchedule(scheduleData);
             
+            // 儲存原始資料到全域變數，供後續更新使用
+            window.currentScheduleData = { taoyuan, zhongli };
+            
             // 格式化並顯示
             scheduleTextTaoyuan.innerHTML = formatScheduleText(taoyuan);
             scheduleTextZhongli.innerHTML = formatScheduleText(zhongli);
@@ -400,6 +446,25 @@ async function loadSchedule() {
         console.error('載入時刻表失敗:', error);
         scheduleTextTaoyuan.innerHTML = '<p style="color: #f59e0b;">⚠️ 載入失敗</p><p style="font-size: 0.85rem;">請稍後重試</p>';
         scheduleTextZhongli.innerHTML = '<p style="color: #f59e0b;">⚠️ 載入失敗</p><p style="font-size: 0.85rem;">請稍後重試</p>';
+    }
+}
+
+// 更新時刻表中的妹妹名稱鏈接
+function updateScheduleGirlNames() {
+    if (!girlsData || girlsData.length === 0) {
+        console.log('⚠️ girlsData 尚未載入，跳過更新時刻表名稱');
+        return;
+    }
+    
+    // 取得當前時刻表的純文字內容（儲存在全域變數中）
+    if (window.currentScheduleData) {
+        const { taoyuan, zhongli } = window.currentScheduleData;
+        
+        // 重新格式化（這次 girlsData 已經有資料了）
+        scheduleTextTaoyuan.innerHTML = formatScheduleText(taoyuan);
+        scheduleTextZhongli.innerHTML = formatScheduleText(zhongli);
+        
+        console.log('✅ 時刻表名稱鏈接已更新');
     }
 }
 
@@ -512,6 +577,9 @@ async function loadGirlsData(forceReload = false) {
         renderGallery();
         updateTabCounts();
         
+        // 妹妹資料載入完成後，重新更新時刻表的名稱鏈接
+        updateScheduleGirlNames();
+        
     } catch (error) {
         console.error('載入資料失敗:', error);
         galleryContainer.innerHTML = `
@@ -529,6 +597,9 @@ function renderFromCache() {
     girlsData = cachedData;
     renderGallery();
     updateTabCounts();
+    
+    // 使用快取資料後，重新更新時刻表的名稱鏈接
+    updateScheduleGirlNames();
 }
 
 // 簡單的 CSV 解析器
