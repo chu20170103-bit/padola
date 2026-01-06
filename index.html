@@ -4,11 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>潘朵拉 - 桃園中壢廠家 | 自動化預約系統</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="潘朵拉桃園中壢廠家，提供自動化預約系統，16+在班妹妹，24/7自動化服務，100%真實照片，極速報班體驗">
+    <meta name="keywords" content="潘朵拉,桃園,中壢,預約系統,自動化報班,在班妹妹">
+    <meta name="author" content="潘朵拉">
+    <link rel="canonical" href="https://padola.com">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="潘朵拉 - 桃園中壢廠家 | 自動化預約系統">
+    <meta property="og:description" content="歡迎體驗極速預約快感 · 智能報班系統">
+    <meta property="og:locale" content="zh_TW">
+    
+    <!-- Performance Optimization -->
+    <link rel="preconnect" href="https://docs.google.com">
+    <link rel="dns-prefetch" href="https://docs.google.com">
+    <link rel="preconnect" href="https://drive.google.com">
+    <link rel="dns-prefetch" href="https://drive.google.com">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
+    
+    <!-- Stylesheet -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Skip to Content (Accessibility) -->
+    <a href="#home" class="skip-to-content" aria-label="跳至主要內容">跳至主要內容</a>
+    
     <!-- 導航欄 -->
-    <nav class="navbar">
+    <nav class="navbar" role="navigation" aria-label="主要導航">
         <div class="nav-container">
             <div class="logo">
                 <span class="logo-icon">💎</span>
@@ -21,16 +47,17 @@
                 <a href="#rules" class="nav-link">注意事項</a>
                 <a href="#contact" class="nav-link">立即報班</a>
             </div>
-            <div class="hamburger" id="hamburger">
+            <button class="hamburger" id="hamburger" aria-label="開啟選單" aria-expanded="false">
                 <span></span>
                 <span></span>
                 <span></span>
-            </div>
+            </button>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <section class="hero" id="home">
+    <main>
+    <section class="hero" id="home" aria-label="首頁橫幅">
         <div class="hero-overlay"></div>
         <div class="hero-content">
             <div class="hero-text">
@@ -57,7 +84,7 @@
                 </div>
                 <div class="hero-buttons">
                     <a href="#gallery" class="btn btn-primary">⚡ 極速查看</a>
-                    <a href="https://lin.ee/xTNGXqZ6" class="btn btn-secondary" target="_blank">🚀 自動報班</a>
+                    <a href="https://lin.ee/xTNGXqZ6" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">🚀 自動報班</a>
                 </div>
             </div>
         </div>
@@ -135,23 +162,23 @@
             <p class="section-subtitle">所有照片100%真實 · 本人服務 · 自動化報班系統</p>
             
             <!-- 分類標籤 -->
-            <div class="tabs">
-                <button class="tab-btn active" data-category="all">
+            <div class="tabs" role="tablist" aria-label="分類篩選">
+                <button class="tab-btn active" data-category="all" role="tab" aria-selected="true" aria-controls="galleryContainer">
                     <span>全部</span>
                     <span class="tab-count">16</span>
                 </button>
-                <button class="tab-btn" data-category="桃園">
+                <button class="tab-btn" data-category="桃園" role="tab" aria-selected="false" aria-controls="galleryContainer">
                     <span>桃園區</span>
                     <span class="tab-count">7</span>
                 </button>
-                <button class="tab-btn" data-category="中壢">
+                <button class="tab-btn" data-category="中壢" role="tab" aria-selected="false" aria-controls="galleryContainer">
                     <span>中壢區</span>
                     <span class="tab-count">9</span>
                 </button>
             </div>
 
             <!-- 圖片網格 - 將從資料庫動態載入 -->
-            <div class="gallery" id="galleryContainer">
+            <div class="gallery" id="galleryContainer" role="tabpanel" aria-live="polite">
                 <!-- 載入中提示 -->
                 <div class="loading-message">
                     <div class="loader"></div>
@@ -233,15 +260,15 @@
             <h2 class="section-title">極速報班預約</h2>
             <p class="section-subtitle">體驗自動化預約快感 · 選擇妹妹立即報班</p>
             <div class="contact-methods">
-                <a href="https://line.me/ti/p/uIhuzkYEr-" class="contact-btn line-btn" target="_blank">
+                <a href="https://line.me/ti/p/uIhuzkYEr-" class="contact-btn line-btn" target="_blank" rel="noopener noreferrer" aria-label="LINE 極速報班">
                     <span class="contact-icon">⚡</span>
                     <span>LINE 極速報班</span>
                 </a>
-                <a href="https://lin.ee/xTNGXqZ6" class="contact-btn schedule-btn" target="_blank">
+                <a href="https://lin.ee/xTNGXqZ6" class="contact-btn schedule-btn" target="_blank" rel="noopener noreferrer" aria-label="官方即時班表">
                     <span class="contact-icon">📋</span>
                     <span>官方即時班表</span>
                 </a>
-                <a href="https://lin.ee/cHYbaIk" class="contact-btn vip-btn" target="_blank">
+                <a href="https://lin.ee/cHYbaIk" class="contact-btn vip-btn" target="_blank" rel="noopener noreferrer" aria-label="特殊客預付卡查號台官方">
                     <span class="contact-icon">👑</span>
                     <span>【特殊客/預付卡】查號台官方</span>
                 </a>
@@ -261,31 +288,31 @@
     </section>
 
         <!-- 燈箱效果 -->
-        <div class="lightbox" id="lightbox">
-            <span class="close-btn">&times;</span>
-            <img class="lightbox-img" id="lightbox-img" src="" alt="">
-            <button class="nav-btn prev-btn" id="prev-btn">&#10094;</button>
-            <button class="nav-btn next-btn" id="next-btn">&#10095;</button>
+        <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="圖片預覽">
+            <button class="close-btn" aria-label="關閉預覽">&times;</button>
+            <img class="lightbox-img" id="lightbox-img" src="" alt="圖片預覽">
+            <button class="nav-btn prev-btn" id="prev-btn" aria-label="上一張">&#10094;</button>
+            <button class="nav-btn next-btn" id="next-btn" aria-label="下一張">&#10095;</button>
         </div>
 
     <!-- 地址&停車場浮框 -->
-    <div class="address-modal" id="addressModal">
+    <div class="address-modal" id="addressModal" role="dialog" aria-modal="true" aria-labelledby="addressModalTitle">
         <div class="address-modal-overlay" id="addressModalOverlay"></div>
         <div class="address-modal-content">
-            <button class="address-modal-close" id="addressModalClose">&times;</button>
+            <button class="address-modal-close" id="addressModalClose" aria-label="關閉">&times;</button>
             <h3 class="address-modal-title" id="addressModalTitle">🚘 地址 & 停車場資訊</h3>
             <div class="address-modal-body">
                 <!-- 圖片區域 -->
                 <div class="address-image-section">
                     <img id="addressImage" src="" alt="地址圖片" class="address-image">
-                    <button class="address-copy-btn" id="copyImageBtn" title="複製圖片連結">
+                    <button class="address-copy-btn" id="copyImageBtn" title="複製圖片連結" aria-label="複製圖片連結">
                         <span class="copy-icon">📋</span> 複製圖片
                     </button>
                 </div>
                 <!-- 內容區域 -->
                 <div class="address-content-section">
                     <div id="addressContent" class="address-content"></div>
-                    <button class="address-copy-btn" id="copyContentBtn" title="複製內容">
+                    <button class="address-copy-btn" id="copyContentBtn" title="複製內容" aria-label="複製內容">
                         <span class="copy-icon">📋</span> 複製內容
                     </button>
                 </div>
@@ -306,7 +333,7 @@
                 <p class="footer-slogan">歡迎體驗極速預約快感</p>
                 <p class="footer-copyright">
                     &copy; 2025 
-                    <a href="https://lin.ee/30SMeiM" target="_blank" class="footer-link">捷效數位網路製作</a> 
+                    <a href="https://lin.ee/30SMeiM" target="_blank" rel="noopener noreferrer" class="footer-link">捷效數位網路製作</a> 
                     All rights reserved.
                 </p>
             </div>
@@ -314,9 +341,10 @@
     </footer>
 
     <!-- 回到頂部按鈕 -->
-    <button class="scroll-to-top" id="scrollToTop">
+    <button class="scroll-to-top" id="scrollToTop" aria-label="回到頂部">
         <span>↑</span>
     </button>
+    </main>
 
     <script src="config.js"></script>
     <script src="script.js"></script>

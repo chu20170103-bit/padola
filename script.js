@@ -997,8 +997,9 @@ window.addEventListener('scroll', () => {
 // 漢堡選單
 if (hamburger) {
     hamburger.addEventListener('click', () => {
-        navMenu.classList.toggle('active');
+        const isActive = navMenu.classList.toggle('active');
         hamburger.classList.toggle('active');
+        hamburger.setAttribute('aria-expanded', isActive ? 'true' : 'false');
     });
 }
 
@@ -1031,10 +1032,14 @@ function filterGallery(category) {
 
 tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-        // 移除所有活動狀態
-        tabBtns.forEach(b => b.classList.remove('active'));
+        // 移除所有活動狀態和 aria-selected
+        tabBtns.forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-selected', 'false');
+        });
         // 添加當前按鈕的活動狀態
         btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
 
         const category = btn.dataset.category;
         filterGallery(category);
