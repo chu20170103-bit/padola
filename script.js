@@ -24,37 +24,17 @@ const BLOCK_DURATION = 120000;         // 封鎖時長：2 分鐘
 
 // 使用 localStorage 持久化狀態（即使刷新頁面也能保留）
 function getRefreshCount() {
-    const initialState = { count: 0, lastTime: 0, blockUntil: 0 };
-
-    try {
-        const data = localStorage.getItem('refreshData');
-        if (!data) return initialState;
-
-        const parsed = JSON.parse(data);
-        if (!parsed || typeof parsed !== 'object') return initialState;
-
-        return {
-            count: Number(parsed.count) || 0,
-            lastTime: Number(parsed.lastTime) || 0,
-            blockUntil: Number(parsed.blockUntil) || 0
-        };
-    } catch (error) {
-        // 壞掉或被瀏覽器封鎖的 localStorage 不應中斷整個頁面。
-        console.warn('⚠️ 無法讀取刷新狀態，已改用預設值:', error);
-        return initialState;
-    }
+    const data = localStorage.getItem('refreshData');
+    if (!data) return { count: 0, lastTime: 0, blockUntil: 0 };
+    return JSON.parse(data);
 }
 
 function setRefreshCount(count, lastTime, blockUntil = 0) {
-    try {
-        localStorage.setItem('refreshData', JSON.stringify({
-            count: count,
-            lastTime: lastTime,
-            blockUntil: blockUntil
-        }));
-    } catch (error) {
-        console.warn('⚠️ 無法儲存刷新狀態:', error);
-    }
+    localStorage.setItem('refreshData', JSON.stringify({
+        count: count,
+        lastTime: lastTime,
+        blockUntil: blockUntil
+    }));
 }
 
 // 檢查是否被封鎖
@@ -747,29 +727,8 @@ function convertDriveVideoUrl(url) {
     return null;
 }
 
-// 影片只在使用者主動點擊時才建立 iframe，避免首頁同時載入大量 Google Drive 預覽。
-function loadVideoFrame(videoContainer, videoUrl, title) {
-    if (!videoContainer || videoContainer.dataset.loaded === 'true') return;
-
-    const iframe = document.createElement('iframe');
-    iframe.src = videoUrl;
-    iframe.title = `${title} 的影片`;
-    iframe.loading = 'lazy';
-    iframe.allow = 'autoplay; fullscreen; picture-in-picture';
-    iframe.allowFullscreen = true;
-    iframe.referrerPolicy = 'no-referrer';
-
-    videoContainer.replaceChildren(iframe);
-    videoContainer.dataset.loaded = 'true';
-}
-
-// 切回照片時移除 iframe，立刻停止 Drive 影片請求和播放資源。
-function unloadVideoFrame(videoContainer) {
-    if (!videoContainer) return;
-
-    videoContainer.replaceChildren();
-    delete videoContainer.dataset.loaded;
-}
+// 前 N 張卡片照片提高瀏覽器下載優先權；其餘仍立即載入，避免滑動時才出現空白。
+const GALLERY_PRIORITY_IMAGE_COUNT = 4;
 
 // 渲染圖片展示
 function renderGallery() {
@@ -797,6 +756,7 @@ function renderGallery() {
         
         // 處理妹妹資訊文字（保留換行）
         const infoText = girl.info.replace(/\n/g, '<br>');
+        const fetchPriorityAttr = index < GALLERY_PRIORITY_IMAGE_COUNT ? ' fetchpriority="high"' : '';
         
         galleryItem.innerHTML = `
             <div class="girl-media">
@@ -806,11 +766,13 @@ function renderGallery() {
                         <button class="toggle-btn" data-type="video">🎬 影片</button>
                     </div>
                 ` : ''}
-                <div class="girl-image ${videoUrl ? 'active' : ''}">
-                    <img src="${imageUrl}" alt="${girl.name}" loading="lazy" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x600/764ba2/ffffff?text=${encodeURIComponent(girl.name)}'">
+                <div class="girl-image active">
+                    <img src="${imageUrl}" alt="${girl.name}"${fetchPriorityAttr} loading="eager" decoding="async" width="400" height="600" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x600/764ba2/ffffff?text=${encodeURIComponent(girl.name)}'">
                 </div>
                 ${videoUrl ? `
-                    <div class="girl-video" aria-live="polite"></div>
+                    <div class="girl-video">
+                        <iframe src="${videoUrl}" frameborder="0" allow="autoplay" allowfullscreen></iframe>
+                    </div>
                 ` : ''}
             </div>
             <div class="girl-content">
@@ -876,7 +838,7 @@ function renderGallery() {
         }
         
         // 添加照片/影片切換功能
-        if (videoUrl) {
+        if (girl.video) {
             const toggleBtns = galleryItem.querySelectorAll('.toggle-btn');
             const imageDiv = galleryItem.querySelector('.girl-image');
             const videoDiv = galleryItem.querySelector('.girl-video');
@@ -895,11 +857,9 @@ function renderGallery() {
                     if (type === 'photo') {
                         imageDiv.classList.add('active');
                         videoDiv.classList.remove('active');
-                        unloadVideoFrame(videoDiv);
                     } else {
                         imageDiv.classList.remove('active');
                         videoDiv.classList.add('active');
-                        loadVideoFrame(videoDiv, videoUrl, girl.name);
                     }
                 });
             });
